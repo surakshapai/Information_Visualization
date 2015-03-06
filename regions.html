@@ -1,0 +1,504 @@
+<html>
+	<head>
+		<title>Learning D3 </title>
+		<script type="text/javascript" src="lib/d3/d3.min.js"> </script>
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/foundation.css">
+		<link rel="stylesheet" href="css/myCss.css">
+		<script src="js/vendor/modernizr.js"></script>
+		<script src="lib/jquery-1.11.1.js"> </script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+		<script src="lib/jquery-ui-1.11.2/jquery-ui.js"></script>
+		<link rel="stylesheet" href="lib/jquery-ui-1.11.2/jquery-ui.css">
+		<script src="lib/colorbrewer.js"> </script>
+
+	</head>
+	<body>
+	
+	<div class="row">
+    <div class="columns small-9">
+	     <div class="row">
+        	<div class="main" id="main"> </div>
+      	</div>
+		<div class="row">   
+	
+      		<div class="columns small-9 small-centered">	<div id="timeRange" class="selection"> </div> 
+    		</div>
+	
+	</div>
+	</div>
+	<div class="columns small-3">
+	<div class="aside vcard">
+		<div class="row">
+				<input type="checkbox" class="selection" id="numStudents" checked> Number of Students </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  class="selection" id="tuition" checked> Tuition   </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="usSupport" > U.S Funding </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="livingExpenses" checked>Living Expenses </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="numJobs" checked> Jobs Created and Supported </input>
+		</div>
+		
+		<!--<div class="row">
+			<input type="checkbox" class="selection" id="showByRegion">Show by Region</input>
+		</div> -->
+		
+		
+		<div class="row">
+		<fieldset>
+			<label for="regions">Select Region</label>
+				<!--<select name="regions" id="regions"> -->
+				<div class="row">
+				<input type="checkbox" class="regions" id="West" checked>West</input>
+				</div>
+				<div class="row">
+				<input type="checkbox"  class="regions" id="South" checked>South</input>
+				</div>
+				<div class="row">
+				<input type="checkbox" class="regions" id="Northeast" checked>Northeast </input>
+				</div>
+				<div class="row">
+				<input type="checkbox" class="regions" id="Midwest" checked>Midwest</input>
+				</div>
+				
+			<!--	</select> -->
+		 </fieldset>
+		</div>
+		
+	</div >
+	</div>
+	</div>
+		
+	
+	
+	<script>
+		var countYears = 11, //number of years
+		selectedRegions = ["West","South","Northeast","Midwest"],
+		selectedVariables = ["numStudents","tuition","livingExpenses","numJobs"]; 
+		var sortKey;
+		
+		var color = ["rgba(251,180,174,0.8)","rgba(179,205,227,0.8)","rgba(204,235,197,0.8)","rgba(222,203,228,0.8)","rgba(254,217,166,0.8)"];
+		var colorNum = ["#FFEDA0","#FED976","#FEB24C","#FD8D3C","#FC4E2A","#E31A1C","#BD0026"];
+		var PI = Math.PI;
+		i=0;
+		var regionDataComplete;//container for all data
+		
+		//mapping the colors to the variables
+		function colorMap(d){
+				if(d=="numStudents") return color[0];
+				else if(d=="livingExpenses") return color[1];
+				else if(d=="numJobs") return color[2];
+				else if(d=="usSupport") return color[3];
+				else return color[4];
+				
+		
+		};
+
+		//for numStudents
+		function colorMapNum(d){ 
+				if(d<5000){ return colorNum[0]}
+				else if((d>5000 && d<7000)) {
+					return colorNum[1];
+				}
+				else if((d>7000) && (d<10000) ){
+					 return colorNum[2];
+				}
+				else if((d > 10000) && (d < 15000)) {
+					  return colorNum[3];
+				}
+				else if((d> 15000) && (d < 30000)) {
+					return colorNum[4];
+				}
+				else if((d > 30000) && (d < 70000)) {
+					return colorNum[5];
+				}
+				else {
+				return colorNum[6]	;
+				}
+		}
+		
+		//timeRange
+		
+		var sliderTip = function(obj,ui){
+		
+			var lower = "<div>"+obj.slider("values", 0)+"</div>";
+			var upper = "<div>"+obj.slider("values", 1)+"</div>";
+				
+				// update spans with slider values
+			 obj.children(".ui-slider-handle").first().html(lower); 
+			 obj.children(".ui-slider-handle").last().html(upper);
+		 }
+		
+		$("#timeRange").slider({
+			animate:true,
+			range:true,
+			min:2003,
+			max:2014,
+			values :[2003,2014],
+			change:function(event,ui){
+				
+				sliderTip($(this),ui);
+				countYears = $(this).slider("values", 1)-$(this).slider("values", 0);
+			    checked_ids =  updateVariables();
+				update(checked_ids);
+				
+				},
+				create:function(event,ui){
+				
+				sliderTip($(this),ui);
+				
+				} 
+		 
+		 });
+		
+		//region selection 
+		
+		$("#regions").selectmenu ({
+				change: function(event,data){
+					selectedRegions[0] = data.item.value;
+					checked_ids =  updateVariables();
+				    update(checked_ids);
+					
+				}
+		
+		});
+		
+		//region selection using checkboxes
+		$(".regions").change(function(){
+			selectedRegions = [];
+			$(".regions").each(function(){
+				if(this.checked){
+					selectedRegions.push(this.id);
+				}
+			});
+		checked_ids =  updateVariables();
+	    update(checked_ids);  
+		console.log(selectedRegions);
+		
+		});
+		
+		//svg
+	  	var main = d3.select(".main");
+		var mainId = d3.select("#main");
+		var margin = {top: 20, right: 10, bottom: 20, left: 10};
+		var width = parseInt(mainId.style("width"))-margin.right-margin.left;
+		var height = 800 - margin.top-margin.bottom;
+		var chartBckg = main.append("svg")
+			.attr("class", "main")
+			.attr("id", "svgMain")
+			.attr("width", width+margin.left+margin.right)
+			.attr("height", height+margin.top+margin.bottom)
+			.append("svg:g")
+				.attr("id","svggMain")
+				.attr("class","chartBckg")
+				.attr("transform", "translate("+margin.left+width/2+","+margin.top+height/2+")")
+		 chartBckg.call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom));
+		
+		function zoom() 
+		{
+      		chartBckg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+   		}
+		
+		//tooltip		
+		var tip = d3.tip()
+				  .attr("class","d3-tip")
+				  .html(function(d){
+						return "<div>"+d.name+":"+d3.round(d.val,2)+"</div>";
+						});
+		chartBckg.call(tip);
+		
+	    
+		
+		//arc generators		  
+	
+		var arc_final = d3.svg.arc()	
+					.innerRadius(function(d,i) {return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+						 return (2*PI/countYears);
+					    
+					})
+					.outerRadius(function(d){return d.R;});
+					
+		var arc_initial = d3.svg.arc()	
+					.innerRadius(function (d,i){return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+							return 0;
+						})
+					.outerRadius(function (d,i){ return d.R;});
+		
+	
+		
+		//getting data from a JSOn file
+		
+		d3.json("JSON/final/States.json",function(data){
+			
+								
+			regionDataComplete = data;
+			console.log(regionDataComplete[0]);	
+				
+			update(selectedVariables);
+			
+		 });
+		 
+		 //filter based on time range
+		 function isInRange(d){
+				var lower = $("#timeRange").slider("values",0);
+				var upper = $("#timeRange").slider("values",1);
+				if(d.year>=lower && d.year<=upper)
+					{ 
+					
+					 return d ;
+					}
+		}
+		
+		//filter based on the regions
+		function isRegionSelected(d){
+		
+				if(selectedRegions.indexOf(d.region)!=-1)
+				 { 
+				    
+					return d;
+				 
+				 }
+		}
+	
+		//when variables are changed
+	    
+		 function updateVariables(){
+			// var checked_ids = [];
+			selectedVariables = [];
+			$(".selection").each(function(){
+			   if(this.checked){
+					selectedVariables.push(this.id);
+			}
+			});
+			console.log("checked "+selectedVariables);
+		    return selectedVariables;
+		 }
+		 
+		//when checkboxes are toggled
+		d3.selectAll(".selection").on('change',function(){
+		   checked_ids =  updateVariables();
+		   update(checked_ids);
+		
+		});
+		
+		
+		
+		
+		//redrawing the chart based on the variables 
+		function update(ids){
+		
+		var count=0,chart1=[];
+	    d3.selectAll(".chartBckg>*").remove(); 	//clear the chart
+		
+		
+			/**/
+	   
+	   if(ids.length==0){
+		return;
+	   }
+	   
+	   regionData = regionDataComplete.filter(isRegionSelected);
+	   regionData = regionData.filter(isInRange);
+	   
+	   	
+	   //if showByRegion is checked then group by region
+	   //nest by region if the option is selected
+	  // if(d3.select("#showByRegion").property('checked')){
+	   
+	   regionData  = d3.nest()
+					   .key(function(d){ return d.region;})
+					   .key(function(d){return d.year})
+					   .rollup(function(leaves){return {"numStudents": d3.mean(leaves,function(g){return +g.numStudents}),"tuition":d3.mean(leaves,function(g){return +g.tuition}),"usSupport":d3.mean(leaves,function(g){return +g.usSupport}) ,"livingExpenses":d3.mean(leaves,function(g){return +g.livingExpenses}),"numJobs":d3.mean(leaves,function(g){return +g.numJobs})  };})		//aggregate of all the variables
+					   .sortValues(function(a,b){return a[sortKey]-b[sortKey];})
+					   .entries(regionData);
+	  
+	    console.log("Key is "+regionData);
+	 //  }
+	  
+		/**/
+			   
+		
+
+		  //trying to find min max of indi variabes
+		  var newScaleT ,newScaleL, newScaleU,newScaleJ,newScaleN;
+		  var minT=999999,maxT=0, minL=999999,maxL=0,minU=99999,maxU=0,minJ=99999,maxJ=0,minN=99999,maxN=0;
+		  regionData.forEach(function(d){
+
+		  	d.values.forEach(function(d){
+				if(ids.indexOf("numStudents")!=-1){
+					 if(minN>d.values.numStudents){ minN = d.values.numStudents};
+					 if(maxN<d.values.numStudents){ maxN = d.values.numStudents};
+					}
+		  		if(ids.indexOf("tuition")!=-1){
+					 if(minT>d.values.tuition){ minT = d.values.tuition};
+					 if(maxT<d.values.tuition){ maxT = d.values.tuition};
+					}
+				if(ids.indexOf("livingExpenses")!=-1){
+					 if(minL>d.values.livingExpenses){ minL = d.values.livingExpenses};
+					 if(maxL<d.values.livingExpenses){ maxL = d.values.livingExpenses};
+					}
+				if(ids.indexOf("usSupport")!=-1){
+					 if(minU>d.values.usSupport){ minU = d.values.usSupport};
+					 if(maxU<d.values.usSupport){ maxU = d.values.usSupport};
+					}
+				if(ids.indexOf("numJobs")!=-1){
+					 if(minJ>d.values.numJobs){ minJ = d.values.numJobs};
+					 if(maxJ<d.values.numJobs){ maxJ   = d.values.numJobs};
+					}
+		  	});
+
+		  });
+		  
+
+      var minRange = 30;
+      var maxRange = 70;
+		  newScaleT = d3.scale.linear()
+		  				.domain([minT,maxT])
+		  				.range([minRange,maxRange]);
+		  newScaleL = d3.scale.linear()
+		  				.domain([minL,maxL])
+		  				.range([minRange,maxRange]);
+		  newScaleU = d3.scale.linear()
+		  				.domain([minU,maxU])
+		  				.range([minRange,maxRange]);
+		  newScaleJ = d3.scale.linear()
+		  				.domain([minJ,maxJ])
+		  				.range([minRange,maxRange]);
+		  
+		  newScaleN = d3.scale.linear()
+		  				.domain([minN,maxN])
+		  				.range(colorbrewer.RdGy[11]);
+		 
+					
+		
+		 
+		  var keyVariables  = d3.keys(regionData[0].values[0].values).filter(function(d){
+			if(ids.indexOf(d)!=-1) return d;
+		  });
+		  console.log(keyVariables);
+		  
+		
+	
+		console.log(colorMap("numStudents"));
+
+		  var scale = 1;
+		  if ( regionData.length != 0 )
+		  {
+        	if(regionData.length>3) { scale = 1/3;}
+        	 else scale = 1/regionData.length;
+		  } 
+		  var mainId = d3.select("#main");
+		  var width = parseInt(mainId.style("width") );
+		  var svggMain = d3.select("#svggMain");
+ 		
+ 		regionData.forEach(function(d){
+		  if ( svggMain != null && mainId != null )
+		  {
+         svggMain.attr("transform", "translate(0,0)");
+		     svggMain.attr("transform", "translate("+ ( scale * width ) / 2+","+scale*400+")");
+		  }
+			d.values.forEach(function(d){
+				var r = 60;
+				d.values.arcValues = keyVariables.map(function(name){ 
+				var arcObject;
+				var index = ids.indexOf(name) - 1;
+				//console.log(newScale(+d.values[name]));
+				if(name=="numStudents"){ arcObject = {name:name, r:0,R:40,color:colorMapNum(+d.values[name]),val:(+d.values[name]) } ;}
+				if(name=="tuition"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleT(+d.values[name]),color:colorMap(name),val:(+d.values[name]) } ;}
+				if(name=="usSupport"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleU(+d.values[name]),color:colorMap(name),val:(+d.values[name])  } ;}
+				if(name=="numJobs"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleJ(+d.values[name]),color:colorMap(name),val:(+d.values[name])  } ;}
+				if(name=="livingExpenses"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleL(+d.values[name]),color:colorMap(name),val:(+d.values[name])  } ;}
+				arcObject.r = arcObject.r * scale;
+				arcObject.R = arcObject.R * scale;
+				return arcObject;
+		   
+				});
+			});
+		});
+		 
+		 var count=1;
+		 var year = [],regionChart = [],text=[];k=0;j=0;
+		 for(var i=0;i<regionData.length;i++) {
+		 	if(i==3*(count)) {j+=1;k=0; count++;}
+ 	         regionChart[i] = chartBckg.append("g")
+					 .attr("class",regionData[i].key)
+					 .attr("transform","translate("+ scale*width*(k++) +"," + scale*860*(j) + ")");
+					
+			 regionChart[i].append("svg:a")
+						.attr("xlink:href",function(d){ return "states.html?"+regionData[i].key;})
+						.append("text")
+						.attr("x",-20)
+						.attr("y",scale*( maxRange*(ids.length) + 40 )+20 )
+						.style("font-size","14px")
+						.text(function(d){ return regionData[i].key});
+		
+					 
+			 year[i] = regionChart[i].selectAll("g")
+				   .data(regionData[i].values)
+				   .enter()
+				   .append("g")
+					.attr("class","year")
+					.attr("transform",function(d,i){return "rotate("+(360/countYears)*i+")"; })
+					
+			text[i] = year[i].append("text")
+					.attr("x",0)
+					.attr("y",maxRange*(ids.length)*scale+10)
+					.attr("text-anchor", "start") 	
+					.attr("font-size","8")	
+					.transition()
+						.delay(function(d,i){return 50*i;})
+						.duration(1000)
+						.text(function(d){return d.key});
+					
+		
+		
+		
+		
+			var values = year[i].selectAll("path")
+					 .data(function(d){return d.values.arcValues;})
+					 .enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",function(d){return d.color;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.on('click',function(d){return sortData(d.name);})
+						.transition()
+							.ease("linear")
+							.delay(function(d,i) {return 250+i*500;})
+							.duration(1000)
+							.attr("d",arc_final);
+	  
+	   
+		
+	}
+			
+}		
+
+	function sortData(name){
+			
+			sortKey=name;
+			update(selectedVariables);
+
+		}	
+
+	
+		 
+	</script>
+	

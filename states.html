@@ -1,0 +1,481 @@
+<html>
+	<head>
+		<title>Learning D3 </title>
+		<script type="text/javascript" src="lib/d3/d3.min.js"> </script>
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/foundation.css">
+		<link rel="stylesheet" href="css/myCss.css">
+		<script src="js/vendor/modernizr.js"></script>
+		<script src="lib/jquery-1.11.1.js"> </script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+		<script src="lib/jquery-ui-1.11.2/jquery-ui.js"></script>
+		<link rel="stylesheet" href="lib/jquery-ui-1.11.2/jquery-ui.css">
+		
+		<script>
+			var selectedStates=["California","Alabama"];
+			var statesByRegion = {
+			"South":["Delaware","District of Columbia",	"Florida" ,	"Georgia","Maryland","North Carolina", "South Carolina" ,
+					"Virginia" ,"West Virginia","Alabama","Kentucky",	"Mississippi",	
+					"Tennessee",	"Arkansas",	"Louisiana",	"Oklahoma",	"Texas"	],
+			"Midwest":["Indiana","Illinois","Michigan","Ohio", "Wisconsin","Iowa","Nebraska","Kansas","North Dakota","Minnesota","South Dakota","Missouri"],
+			"Northeast":["Connecticut","Maine","Massachusetts" ,"New Hampshire","Rhode Island","Vermont"],
+			"West":["Arizona","Colorado","Idaho","New Mexico","Montana","Utah","Nevada","Wyoming","Alaska","California","Hawaii","Oregon","Washington" ]};
+			
+			var query = window.location.search;
+			// Skip the leading ?, which should always be there, 
+			// but be careful anyway
+			if (query.substring(0, 1) == '?') {
+				query = query.substring(1);
+			}
+			if(query){
+			var whichStates =statesByRegion[query];
+			console.log("query is"+query+"states are"+whichStates);
+			
+				
+				selectedStates = whichStates;
+
+				//console.log(selectedStates);
+				
+			
+		}
+		</script>
+	</head>
+	<body>
+	
+	<div class="row">
+	<div class="columns small-9">
+	     <div class="row">
+		<div class="main" id="main" > </div>
+		</div>
+		<div class="row">   
+	
+	<div class="columns small-10">	<div id="timeRange" class="selection"> </div> </div>
+	
+	</div>
+	</div>
+	<div class="columns small-3">
+	<div class="aside vcard">
+		<div class="row">
+				<input type="checkbox" class="selection" id="numStudents" checked> Number of Students </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  class="selection" id="tuition" checked> Tuition   </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="usSupport"> U.S Funding </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="livingExpenses" checked>Living Expenses </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="numJobs"> Jobs Created and Supported </input>
+		</div>
+		
+		<!--<div class="row">
+			<input type="checkbox" class="selection" id="showByRegion">Show by Region</input>
+		</div> -->
+		
+		
+		<div class="row">
+		<fieldset>
+			<label for="states">Select States</label>
+				<select name="states" id="states">
+				<option value="Alabama">Alabama</option>
+				<option value="Alaska">Alaska</option>
+				<option value="Arizona" selected="selected">Arizona</option>
+				<option value="California">California </option>
+			
+				</select>
+		 </fieldset>
+		</div>
+		
+	</div >
+	</div>
+	</div>
+		
+	
+	
+	<script>
+			
+	    var PI = Math.PI; //radial area
+		i=0;
+		var countYears = 11, //number of years
+		selectedVariables=["numStudents","tuition","livingExpenses","numJobs"];
+		var stateDataComplete;//container for all data
+		var sortKey;
+		
+
+		//color mapppings
+		var color = ["rgba(251,180,174,0.8)","rgba(179,205,227,0.8)","rgba(204,235,197,0.8)","rgba(222,203,228,0.8)","rgba(254,217,166,0.8)"];
+		var colorNum = ["#FFEDA0","#FED976","#FEB24C","#FD8D3C","#FC4E2A","#E31A1C","#BD0026"];
+		
+		function colorMap(d){
+				if(d=="numStudents") return color[0];
+				else if(d=="livingExpenses") return color[1];
+				else if(d=="numJobs") return color[2];
+				else if(d=="usSupport") return color[3];
+				else return color[4];
+				
+		
+		};
+
+		//for numStudents
+		function colorMapNum(d){ 
+				if(d<5000){ return colorNum[0]}
+				else if((d>5000 && d<7000)) {
+					return colorNum[1];
+				}
+				else if((d>7000) && (d<10000) ){
+					 return colorNum[2];
+				}
+				else if((d > 10000) && (d < 15000)) {
+					  return colorNum[3];
+				}
+				else if((d> 15000) && (d < 30000)) {
+					return colorNum[4];
+				}
+				else if((d > 30000) && (d < 70000)) {
+					return colorNum[5];
+				}
+				else {
+				return colorNum[6]	;
+				}
+		}
+
+		//timeRange
+		
+		var sliderTip = function(obj,ui){
+		
+			var lower = "<div>"+obj.slider("values", 0)+"</div>";
+			var upper = "<div>"+obj.slider("values", 1)+"</div>";
+				
+				// update spans with slider values
+			 obj.children(".ui-slider-handle").first().html(lower); 
+			 obj.children(".ui-slider-handle").last().html(upper);
+		 }
+		
+		$("#timeRange").slider({
+			animate:true,
+			range:true,
+			min:2003,
+			max:2014,
+			values :[2003,2014],
+			change:function(event,ui){
+				
+				sliderTip($(this),ui);
+				countYears = $(this).slider("values", 1)-$(this).slider("values", 0);
+			    checked_ids =  updateVariables();
+				update(checked_ids);
+				
+				},
+				create:function(event,ui){
+				
+				sliderTip($(this),ui);
+				
+				} 
+		 
+		 });
+		
+		//state selection 
+		
+		$("#states").selectmenu ({
+				change: function(event,data){
+					selectedStates[0] = data.item.value;
+					checked_ids =  updateVariables();
+				    update(checked_ids);
+					
+				}
+		
+		});
+		//svg
+		var main = d3.select(".main");
+		var mainId = d3.select("#main");
+		var margin = {top: 20, right: 10, bottom: 20, left: 10};
+		var width = parseInt(mainId.style("width"))-margin.right-margin.left;
+		var height = 800 - margin.top-margin.bottom;
+		var chartBckg = main.append("svg")
+			.attr("class", "main")
+			.attr("id", "svgMain")
+			.attr("width", width+margin.left+margin.right)
+			.attr("height", height+margin.top+margin.bottom).append("svg:g")
+			.attr("id","svggMain")
+			.attr("class","chartBckg")
+			.attr("transform", "translate("+parseInt(mainId.style("width"))/2+","+400+")")
+			.call(d3.behavior.zoom().scaleExtent([1, 8]).on("zoom", zoom));
+		
+		function zoom() 
+		{
+      		chartBckg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+   		 }
+			
+		var tip = d3.tip()
+				  .attr("class","d3-tip")
+				  .html(function(d){return "<div>"+d.name+":"+d.val+"</div>"});
+		chartBckg.call(tip);
+	    
+		
+		//arc generators		  
+	
+		var arc_final = d3.svg.arc()	
+					.innerRadius(function(d,i) {return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+						 return (2*PI/countYears);
+					    
+					})
+					.outerRadius(function(d){return d.R;});
+					
+		var arc_initial = d3.svg.arc()	
+					.innerRadius(function (d,i){ return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+							return 0;
+						})
+					.outerRadius(function (d,i){ return d.R;});
+
+		
+		//getting data from a JSOn file
+		
+		d3.json("JSON/final/States.json",function(data){
+			/*stateDataComplete = d3.nest()
+								.key(function(d) {return d.state;})
+								.entries(data);*/
+								
+			stateDataComplete = data;
+			//console.log(stateDataComplete[0]);	
+				
+			update(selectedVariables);
+			
+		 });
+		 
+		 //filter based on time range
+		 function isInRange(d){
+				var lower = $("#timeRange").slider("values",0);
+				var upper = $("#timeRange").slider("values",1);
+				if(d.year>=lower && d.year<=upper)
+					{ 
+					
+					 return d ;
+					}
+		}
+		
+		//filter based on states
+		function isStateSelected(d){
+				if(selectedStates.indexOf(d.state)!=-1)
+				 { 
+				 
+				 return d;
+				 
+				 }
+		}
+	
+	    //when checkboxes are toggled
+		 function updateVariables(){
+			// var checked_ids = [];
+			selectedVariables = [];
+		    $(".selection").each(function(){
+			   if(this.checked){
+					selectedVariables.push(this.id);
+			}
+			});
+			console.log("checked "+selectedVariables);
+		    return selectedVariables;
+		 }
+		
+		d3.selectAll(".selection").on('change',function(){
+		   checked_ids =  updateVariables();
+		   update(checked_ids);
+		
+		});
+		
+	
+		
+		function update(ids){
+		
+		var count=0,chart1=[];
+		var year = [],//each year within a state chart
+		stateChart = [],//each state chart
+		k=0,
+		j=0; //for the charts
+		
+		d3.selectAll(".chartBckg>*").remove(); //clear the chart
+		
+		//return if no variables selected
+		if(ids.length==0){
+		return;
+	   }
+	   //filter the data
+	   stateData = stateDataComplete.filter(isStateSelected); //by state selected
+	   stateData = stateData.filter(isInRange); //by time 
+	   
+	   //nest by state 
+	  
+	   stateData  = d3.nest()
+					   .key(function(d){ return d.state;})
+					   .sortValues(function(a,b){return a[sortKey]-b[sortKey];})
+					   .entries(stateData);  	
+	   
+	  
+	  	console.log(ids);
+		
+		//trying to find min max of indi variabes
+		  var newScaleT ,newScaleL, newScaleU,newScaleJ,newScaleN;
+		  var minT=999999,maxT=0, minL=999999,maxL=0,minU=99999,maxU=0,minJ=99999,maxJ=0,minN=99999,maxN=0;
+		  stateData.forEach(function(d){
+
+		  	d.values.forEach(function(d){
+				if(ids.indexOf("numStudents")!=-1){
+					 if(minN>d.numStudents){ minN = d.numStudents};
+					 if(maxN<d.numStudents){ maxN = d.numStudents};
+					}
+		  		if(ids.indexOf("tuition")!=-1){
+					 if(minT>d.tuition){ minT = d.tuition};
+					 if(maxT<d.tuition){ maxT = d.tuition};
+					}
+				if(ids.indexOf("livingExpenses")!=-1){
+					 if(minL>d.livingExpenses){ minL = d.livingExpenses};
+					 if(maxL<d.livingExpenses){ maxL = d.livingExpenses};
+					}
+				if(ids.indexOf("usSupport")!=-1){
+					 if(minU>d.usSupport){ minU = d.usSupport};
+					 if(maxU<d.usSupport){ maxU = d.usSupport};
+					}
+				if(ids.indexOf("numJobs")!=-1){
+					 if(minJ>d.numJobs){ minJ = d.numJobs};
+					 if(maxJ<d.numJobs){ maxJ   = d.numJobs};
+					}
+		  });
+
+		  });
+		  
+
+      var minRange = 30;
+      var maxRange = 70;
+		  newScaleT = d3.scale.linear()
+		  				.domain([minT,maxT])
+		  				.range([minRange,maxRange]);
+		  newScaleL = d3.scale.linear()
+		  				.domain([minL,maxL])
+		  				.range([minRange,maxRange]);
+		  newScaleU = d3.scale.linear()
+		  				.domain([minU,maxU])
+		  				.range([minRange,maxRange]);
+		  newScaleJ = d3.scale.linear()
+		  				.domain([minJ,maxJ])
+		  				.range([minRange,maxRange]);
+		  
+		console.log("scale for tuition"+minT+" maxT"+maxT);
+		  
+		 
+		  var keyVariables  = d3.keys(stateData[0].values[0]).filter(function(d){
+								if(ids.indexOf(d)!=-1) return d;
+							 });
+		  console.log(keyVariables);
+		  
+		
+	     
+	      var scale = 1;
+		  if ( stateData.length != 0 )
+		  {
+		  		if(stateData.length>3) { scale = 1/3;}
+        	   else scale = 1/stateData.length;
+        	  //scale = 1/stateData.length;
+		  } 
+		  var mainId = d3.select("#main");
+		  var width = parseInt(mainId.style("width") );
+		  var svggMain = d3.select("#svggMain");
+
+	      stateData.forEach(function(d){
+	      	 if ( svggMain != null && mainId != null )
+		 	 {
+         		svggMain.attr("transform", "translate(0,0)");
+		     	svggMain.attr("transform", "translate("+ ( scale * width ) / 2+","+scale*400+")");
+		 	 }
+			d.values.forEach(function(d){
+				var r = 60;
+				d.arcValues =keyVariables.map(function(name){ 
+					var arcObject;
+					var index = ids.indexOf(name) - 1;
+					//console.log(newScale(+d[name]));
+					if(name=="numStudents"){ arcObject = {name:name, r:0,R:40,color:colorMapNum(+d[name]),val:(+d[name]) } ;}
+					if(name=="tuition"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleT(+d[name]),color:colorMap(name),val:(+d[name]) } ;}
+					if(name=="usSupport"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleU(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+					if(name=="numJobs"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleJ(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+					if(name=="livingExpenses"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleL(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+					arcObject.r = arcObject.r * scale;
+					arcObject.R = arcObject.R * scale;
+					return arcObject;
+					//return {name:name, r:r ,R:r+= newScale(+d[name]),color:colorMap(name) } ;
+				});
+		   });
+		  });
+		
+		var count=1;
+		for(var i=0;i<stateData.length;i++) {
+			if(i==3*(count)) {j+=1;k=0; count++;}
+		stateChart[i] = chartBckg.append("g")
+						.attr("class",stateData[i].key)
+						.attr("transform","translate("+scale*width*(k++)+","+scale*860*(j)+")");
+					
+		stateChart[i].append("text")
+						.attr("x",-25)
+						.attr("y",scale*( maxRange*(ids.length) + 40 )+20)
+						.style("font-size","14px")
+						.text(stateData[i].key);
+		
+	
+		var year = stateChart[i].selectAll("g")
+				   .data(stateData[i].values)
+				   .enter()
+				   .append("g")
+					.attr("class","year")
+					.attr("transform",function(d,i){return "rotate("+(360/countYears)*i+")"; })
+					
+		year.append("text")
+					.attr("x",0)
+					.attr("y",maxRange*(ids.length)*scale+10)
+					.attr("text-anchor", "start") 	
+					.attr("font-size","8")	
+					.transition()
+						.delay(function(d,i){return 50*i;})
+						.duration(1000)
+						.text(function(d){return d.year});
+					
+		var values = year.selectAll("path")
+					 .data(function(d){return d.arcValues;})
+					 .enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",function(d){return d.color;})	
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.on('click',function(d){return sortData(d.name);})
+						.transition()
+							.delay(function(d,i) {return 250+i*500;})
+							.duration(1000)
+							.attr("d",arc_final);
+	
+	    }
+		
+	}	
+
+	function sortData(name){
+			
+			sortKey=name;
+			update(selectedVariables);
+
+		}	
+		
+		
+										
+		 
+	</script>
+	</body>
+	</html>
+

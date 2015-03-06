@@ -1,0 +1,132 @@
+
+		/*for(var i=0;i<count;i++){
+			 chart1[i] = chartBckg.append("g")
+									.attr("class",ids[i]); 
+			
+			
+	        var temp = chartBckg.selectAll(ids[i])
+					   .append("path")
+					   .attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",color[i])
+						.text(function(d){return d;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.transition()
+							.delay(250+i*500)
+							.attr("d",arc_final);
+					   
+				
+			  console.log("temp is "+temp);
+			
+			 
+				/*temp.enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",color[i])
+						.text(function(d){return d;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.transition()
+							.delay(250+i*500)
+							.attr("d",arc_final);
+							
+				a = newScale(countryData.numStudents);
+			   console.log("countryData is "+countryData.numStudents+"scaled is "+a);
+			   year++;
+			}*/
+		 
+		 
+		 
+		  
+		// var hmm = tuition;
+	
+		  
+		  
+			
+		//gettig the data
+		/*	if(ids.indexOf("numStudents")!=-1){
+				variable[count++] = countryData.map(function(d){
+						
+					return d.numStudents;
+				});
+			 
+			    
+			}
+			if(ids.indexOf("tuition")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.tuition;
+				});
+			
+			}
+			
+			if(ids.indexOf("livingExpenses")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.livingExpenses;
+				});
+			
+			}
+			
+			if(ids.indexOf("usSupport")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.usSupport;
+				});
+			
+			}
+			if(ids.indexOf("numJobs")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.numJobs;
+				});
+			
+			}
+			
+			
+			
+			console.log("variable"+variable[0]);
+			//defining the scales
+			
+			for(var i=0;i<variable.length;i++){
+				variableScale[i] = d3.scale.linear()
+									.domain([d3.min(variable[i]),d3.max(variable[i])])
+									.range([50,250]);
+				scaledData[i] = [0];
+				  
+				 for (var j = 0; j < variable[i].length; j++) {
+				     
+					 scaledData[i][j]=variableScale[i](variable[i][j]);
+				}
+				
+				console.log("loop 0"+scaledData[i]);
+			}
+			
+			
+			//getting the scaled data
+			//drawing 
+			for(var l=0;l<count;l++){
+			 chart1[l] = chartBckg.append("g")
+									.attr("class",ids[i]);
+			
+			 var temp = chart1[l].selectAll("path")
+					 .data(scaledData[l]);
+					 
+				temp.enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",color[l])
+						.text(function(d){return d;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.transition()
+							.delay(250+l*500)
+							.attr("d",arc_final);
+			}
+			/**/

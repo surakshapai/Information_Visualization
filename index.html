@@ -1,0 +1,644 @@
+<html>
+	<head>
+		<title>Learning D3 </title>
+		<script type="text/javascript" src="lib/d3/d3.min.js"> </script>
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/foundation.css">
+		<link rel="stylesheet" href="css/myCss.css">
+		<script src="js/vendor/modernizr.js"></script>
+		<script src="lib/jquery-1.11.1.js"> </script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+		<script src="lib/jquery-ui-1.11.2/jquery-ui.js"></script>
+		<link rel="stylesheet" href="lib/jquery-ui-1.11.2/jquery-ui.css">
+		<script src="js/finalheatmap.js"></script>
+
+		<style>
+		
+
+		.arc path {
+		  stroke: #fff;
+		}
+
+		#mytooltip {   
+		position: absolute;           
+		text-align: center;
+		padding: 20px;             
+		margin: 10px;
+		font: 12px sans-serif;        
+		background: lightsteelblue;   
+		border: 1px;      
+		border-radius: 2px;           
+		pointer-events: none;         
+		}
+		#mytooltip h4{
+			margin:0;
+			font-size:14px;
+		}
+		#mytooltip{
+			background:rgba(0,0,0,0.9);
+			border:1px solid grey;
+			border-radius:5px;
+			font-size:12px;
+			width:auto;
+			padding:4px;
+			color:white;
+			opacity:0;
+		}
+		#mytooltip table{
+			table-layout:fixed;	
+		}
+		#tooltip tr td{
+			padding:0;
+			margin:0;
+		}
+		#mytooltip tr td:nth-child(1){
+			width:50px;
+		}
+		#mytooltip tr td:nth-child(2){
+			text-align:center;
+		}
+		</style>
+	</head>
+	<body>
+	<div class="row">
+	<div class="columns small-9">
+	     <div class="row">
+		<div class="main" id="main" > </div>
+		</div>
+		<div class="row">   
+	
+	<!-- <div class="columns small-10">	<div id="timeRange" class="selection"> </div> </div> -->
+	
+		</div>
+	</div>
+	<div class="columns small-3">
+	<div class="aside">
+		<div id="timeRange" class="selection" style='margin-bottom:70px'></div>
+		<div class="row">
+				<input type="checkbox" class="selection" id="numStudents" checked> Number of Students </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  class="selection" id="tuition" checked> Tuition   </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="usSupport" > U.S Funding </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="livingExpenses" checked> Living Expenses </input>
+		</div>
+		<div class="row">
+			<input type="checkbox" class="selection" id="numJobs" checked> Jobs Created </input>
+		</div>
+		
+		<div class="row"></div>
+		<div class="row button-row" style="margin-top: 20px">
+			<button class="button-aside"><a href="states.html">State View</a></button>
+		</div>
+		<div class="row">
+			<button class="button-aside"><a href="regions.html">Region View</a></button>	
+		</div>
+
+
+	<!-- 	<div class="row">   
+	
+			<div class="columns small-10">	<div id="timeRange" class="selection"> </div> </div>
+	
+		</div> -->
+	
+	</div>
+	</div>
+	<div class="row" >
+		<div style="float:left">
+			
+		<svg id="statesSvg" viewBox = "0 0 1580 600" width="500" height="300"></svg>
+		</div>
+		
+		<div style="float:left; margin-top:40px"> 
+			<div>
+				<div id="chart0" style="display:inline-block"></div>
+				<div id="chart1" style="display:inline-block"></div>
+				<div id="chart2" style="display:inline-block"></div>
+				<div id="chart3" style="display:inline-block"></div>
+				<div id="chart4" style="display:inline-block"></div>
+			</div>
+				<div id="mytooltip"></div>
+
+			
+			<script>
+				var showPie = function() {
+				var studentData;
+				var finalData = [];
+				var year_04 = [];
+				var year_05 = [];
+				var year_06 = [];
+				var year_07 = [];
+				var year_08 = [];
+				var year_09 = [];
+				var year_10 = [];
+				var year_11 = [];
+				var year_12 = [];
+				var year_13 = [];
+				var year_14 = [];
+				var selectedYear = "";
+
+				var sizes = [30, 60, 90, 120, 150];
+
+
+				d3.json("Place_of_origin.json",function(data){
+					studentData = data;
+					configureFinalData(studentData);
+				 });
+
+
+				configureFinalData = function(studentData) {
+					studentData.forEach(function(d) {
+						yearInJson = d.Year.split("-")[1];
+						if((yearInJson == '2004') && (year_04.length < 5)) {
+							year_04 = constructYearData(year_04, d);
+						} else if((yearInJson == '2005') && (year_05.length < 5)) {
+							year_05 = constructYearData(year_05, d);
+						} else if((yearInJson == '2006') && (year_06.length < 5)) {
+							year_06 = constructYearData(year_06, d);
+						} else if((yearInJson == '2007')  && (year_07.length < 5)) {
+							year_07 = constructYearData(year_07, d);
+						} else if((yearInJson == '2008')  && (year_08.length < 5)) {
+							year_08 = constructYearData(year_08, d);
+						} else if((yearInJson == '2009')  && (year_09.length < 5)) {
+							year_09 = constructYearData(year_09, d);
+						} else if((yearInJson == '2010')  && (year_10.length < 5)) {
+							year_10 = constructYearData(year_10, d);
+						} else if((yearInJson == '2011')  && (year_11.length < 5)) {
+							year_11 = constructYearData(year_11, d);
+						} else if((yearInJson == '2012')  && (year_12.length < 5)) {
+							year_12 = constructYearData(year_12, d);
+						} else if((yearInJson == '2013')  && (year_13.length < 5)) {
+							year_13 = constructYearData(year_13, d);
+						} else {
+							if(year_14.length < 5)
+							{
+								year_14 = constructYearData(year_14, d);
+							}
+						}
+					});
+					
+					populationSize = [];
+					
+					for(key in year_04) {
+						populationSize.push(year_04[key][2]);
+					}
+					
+					populationSize = populationSize.sort();
+
+					for(key in year_04) {
+						someNumber = populationSize.indexOf(year_04[key][2]);
+						year_04[key].push(sizes[someNumber]);
+						drawPie(year_04[key], key);
+					}
+				}
+
+				constructYearData = function(year_No, d, toolTip) {
+					totalStudents = d['0 of students'];
+					numGrad = d['0graduate'];
+					numUnderGrad = d['0undergraduate'];
+					sourceCountry = d['Place of Origin'];
+					year_No.push([[{'level':'graduate', 'value':numGrad}, {'level':'undergraduate', 'value':numUnderGrad}],sourceCountry, totalStudents]);
+					return year_No;
+				}
+				
+
+    	var drawPie = function(finalData, indexKey) { 
+    		finalData[0].forEach(function(d) {
+			     d.numOf = +d.value;
+			  });
+
+    		var width = finalData[3]+10,
+   				height = finalData[3]+50,
+    			radius = Math.min(width, height) / 2;
+
+	    	var color = d3.scale.ordinal()
+	    		.range(["#fec44f","#d95f0e"]);
+
+	    	var arc = d3.svg.arc()
+	    		.outerRadius(radius - 10)
+	    		.innerRadius(0)
+
+	    	var pie = d3.layout.pie()
+	    		.sort(null)
+	    		.value(function(data) { return data.numOf; });
+
+	    	function mouseOver(d){
+				d3.select("#mytooltip").transition().duration(200).style("opacity", .9);      
+				d3.select("#mytooltip").html(tooltipHtml(finalData))  
+					.style("left", (d3.event.pageX - 150) + "px")     
+					.style("top", (d3.event.pageY - 28) + "px");
+			}
+		
+			function mouseOut(){
+				d3.select("#mytooltip").transition().duration(500).style("opacity", 0);      
+			}
+
+			function tooltipHtml(d){	/* function to create html content string in tooltip div. */
+				toolTipContent =  "<h4 style='background-color:white'>"+d[1]+"</h4><table>"+
+				"<tr><td>Graduates</td><td>"+(d[0][0]['value'])+"</td></tr>"+
+				"<tr><td>Undergraduates</td><td>"+(d[0][1]['value'])+"</td></tr>"+
+				"<tr><td>Total</td><td>"+(d[2])+"</td></tr>"+
+				"</table>";
+				return toolTipContent;
+		}
+
+			var svg = d3.select("#chart"+indexKey).append("svg")
+    				.attr("width", width)
+   	 				.attr("height", height)
+  					.append("g")
+    				.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")")
+    				.on("mouseover", mouseOver).on("mouseout", mouseOut);
+
+    		var text= svg.append("text")
+    			.attr("x",-10)
+    			.attr("y",radius+10)
+    			.attr("text-anchor","start")
+    			.attr("font-size","10px")
+    			.text(function(d){if(finalData[1]=='Korea Republic of'){return "Korea";}return finalData[1];});
+
+    		var g = svg.selectAll(".arc")
+			      .data(pie(finalData[0]))
+			      .enter().append("g")
+			      .attr("class", "arc");
+
+			g.append("path")
+			       .attr("d", arc)
+			       .style("fill", function(d) { return (color(d.data.level)); 
+		});
+			       }
+
+				}
+			</script>		
+		</div>
+	</div>
+		
+	
+	
+	
+		<script>
+		$(this).on("load",function(){
+				extractSelectedYearData("2004");
+			});
+		//radial area
+	    var PI = Math.PI;
+		
+		var countYears = 11,//number of years
+		selectedVariables=["numStudents","tuition","livingExpenses","numJobs"];
+		//container for all data
+	    var countryDataComplete;
+		
+		//color mapppings
+		var color = ["rgba(251,180,174,0.8)","rgba(179,205,227,0.8)","rgba(204,235,197,0.8)","rgba(222,203,228,0.8)","rgba(254,217,166,0.8)"];
+		var colorNum = ["#FFEDA0","#FED976","#FEB24C","#FD8D3C","#FC4E2A","#E31A1C","#BD0026"];
+		var sortKey ;
+		
+		function colorMap(d){
+				if(d=="numStudents") return color[0];
+				else if(d=="livingExpenses") return color[1];
+				else if(d=="numJobs") return color[2];
+				else if(d=="usSupport") return color[3];
+				else return color[4];
+				
+		
+		};
+
+		//for numStudents
+		function colorMapNum(d){ 
+				
+				if(d<=500000){  return colorNum[0]}
+				else if((d>500000 && d<=700000)) {
+					return colorNum[1];
+				}
+				else if((d>700000) && (d<800000) ){
+					 return colorNum[2];
+				}
+				else if((d > 800000) && (d <=1000000)) {
+					  return colorNum[3];
+				}
+				
+				else {
+					
+				return colorNum[6]	;
+				}
+		}
+		
+		//timeRange
+		
+		
+		$("#timeRange").slider({
+			animate:true,
+			range:true,
+			min:2004,
+			max:2014,
+			values :[2004,2014],
+			change:function(event,ui){
+				
+				sliderTip($(this),ui);
+				countYears = $(this).slider("values", 1)-$(this).slider("values", 0);
+			
+				var checked_ids = [];
+			
+				$("input:checkbox").each(function(){
+				if(this.checked){
+					checked_ids.push(this.id);
+				}
+				});
+				console.log("checked "+checked_ids);
+				update(checked_ids);
+				extractSelectedYearData($(this).slider("values", 0));
+				showPie()
+				},
+				create:function(event,ui){
+				
+				var lower = '<div id="sliderHandle">'+$(this).slider("values", 0)+'</div>';
+				var upper = '<div id="sliderHandle">'+$(this).slider("values", 1)+'</div>';
+				
+				// update spans with slider values
+			    $(this).children(".ui-slider-handle").first().html(lower); 
+				$(this).children(".ui-slider-handle").last().html(upper);
+				
+				
+				
+			} 
+		 
+		 });
+		
+		var sliderTip = function(obj,ui){
+			var lower = "<div>"+obj.slider("values", 0)+"</div>";
+			var upper = "<div>"+obj.slider("values", 1)+"</div>";
+				
+				// update spans with slider values
+			 obj.children(".ui-slider-handle").first().html(lower); 
+			 obj.children(".ui-slider-handle").last().html(upper);
+			 
+		
+		
+		
+		}
+		 
+		
+		
+		
+		//svg
+		var main = d3.select(".main");
+		var mainId = d3.select("#main");
+		var margin = {top: 20, right: 10, bottom: 20, left: 10};
+		var width = parseInt(mainId.style("width"))-margin.right-margin.left;
+		var height = 400 - margin.top-margin.bottom;
+		var chartBckg = main.append("svg")
+			.attr("class", "main")
+			.attr("id", "svgMain")
+			.attr("width", width+margin.left+margin.right)
+			.attr("height", height+margin.top+margin.bottom)
+			.append("svg:g")
+				.attr("id","svggMain")
+				.attr("class","chartBckg")
+				.attr("transform", "translate("+margin.left+width/2+","+margin.top+height/2+")");
+		
+	    
+			
+		var tip = d3.tip()
+				  .attr("class","d3-tip")
+				  .html(function(d){return "<div>"+d.name+":"+d.val+"</div>"});
+		chartBckg.call(tip);
+		 
+	
+		
+		//getting data from a JSOn file
+		
+		d3.json("JSON/final/Country.json",function(data){
+			countryDataComplete = data;
+			update(selectedVariables);
+		 });
+		 
+		 function isInRange(d){
+				var lower = $("#timeRange").slider("values",0);
+				var upper = $("#timeRange").slider("values",1);
+				if(d.year>=lower && d.year<=upper)
+					{ 
+					
+					 return d ;
+					}
+				
+		}
+	
+		//when checkboxes are toggled	
+		 function updateVariables(){
+			// var checked_ids = [];
+			selectedVariables = [];
+		    $(".selection").each(function(){
+			   if(this.checked){
+					selectedVariables.push(this.id);
+			}
+			});
+			console.log("checked "+selectedVariables);
+		    return selectedVariables;
+		 }
+		
+		d3.selectAll(".selection").on('change',function(){
+		   checked_ids =  updateVariables();
+		   update(checked_ids);
+		
+		});
+		
+		//arc generators		  
+	
+		var arc_final = d3.svg.arc()	
+					.innerRadius(function(d,i) {return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+						 return (2*PI/countYears);
+					    
+					})
+					.outerRadius(function(d){return d.R;});
+					
+		var arc_initial = d3.svg.arc()	
+					.innerRadius(function (d,i){ return d.r;})
+					.startAngle(function(d,i){
+							return 0;
+						})
+					.endAngle(function(d,i){
+							return 0;
+						})
+					.outerRadius(function (d,i){ return d.R;});
+		
+		//to draw the charts			
+		
+		function update(ids){
+			var newScaleT ,newScaleL, newScaleU,newScaleJ,newScaleN;
+			var count=0,
+			chart1=[];
+			var minT=999999,maxT=0, minL=999999,maxL=0,minU=99999,maxU=0,minJ=99999,maxJ=0,minN=99999,maxN=0;
+			var minRange = 30;
+      		var maxRange = 70;
+		
+	    	d3.selectAll(".chartBckg>*").remove(); //clear the canvas
+		
+			console.log(ids);
+			/**/
+			//return if no variables selected
+			if(ids.length==0){
+				return;
+	   		}
+	   		//filter the data	
+		 	countryData = countryDataComplete.filter(isInRange); 
+			countryData.sort(function(a,b){
+		 		return a[sortKey]-b[sortKey];
+
+
+		 	});
+		
+		 
+		   
+	 		//trying to find min max of indi variabes
+		 
+			
+		 	countryData.forEach(function(d){
+				if(ids.indexOf("numStudents")!=-1){
+				 	if(minN>d.numStudents){ minN = d.numStudents};
+				 	if(maxN<d.numStudents){ maxN = d.numStudents};
+			}
+			if(ids.indexOf("tuition")!=-1){
+				if(minT>d.tuition){ minT = d.tuition};
+				if(maxT<d.tuition){ maxT = d.tuition};
+			}
+			if(ids.indexOf("livingExpenses")!=-1){
+				 if(minL>d.livingExpenses){ minL = d.livingExpenses};
+				 if(maxL<d.livingExpenses){ maxL = d.livingExpenses};
+			}
+			if(ids.indexOf("usSupport")!=-1){
+				if(minU>d.usSupport){ minU = d.usSupport};
+				 if(maxU<d.usSupport){ maxU = d.usSupport};
+			}
+			if(ids.indexOf("numJobs")!=-1){
+				if(minJ>d.numJobs){ minJ = d.numJobs};
+				 if(maxJ<d.numJobs){ maxJ   = d.numJobs};
+			}
+		
+
+	 	});
+		  
+
+      
+		  newScaleT = d3.scale.linear()
+		  				.domain([minT,maxT])
+		  				.range([minRange,maxRange]);
+		  newScaleL = d3.scale.linear()
+		  				.domain([minL,maxL])
+		  				.range([minRange,maxRange]);
+		  newScaleU = d3.scale.linear()
+		  				.domain([minU,maxU])
+		  				.range([minRange,maxRange]);
+		  newScaleJ = d3.scale.linear()
+		  				.domain([minJ,maxJ])
+		  				.range([minRange,maxRange]);
+		  
+		console.log("scale for tuition"+minT+" maxT"+maxT);
+		  
+		 
+		  var keyVariables  = d3.keys(countryData[0]).filter(function(d){
+			if(ids.indexOf(d)!=-1) return d;
+		  });
+		  console.log(keyVariables);
+		  
+		 
+		
+		console.log(colorMap("numStudents"));
+
+		 var scale = 0.5;
+		 var mainId = d3.select("#main");
+		 var width = parseInt(mainId.style("width") );
+		 var svggMain = d3.select("#svggMain");
+		
+		//add arc values for each year
+	      countryData.forEach(function(d){
+	      	if ( svggMain != null && mainId != null )
+		 	 {
+         		svggMain.attr("transform", "translate(0,0)");
+		     	svggMain.attr("transform", "translate("+ (1.2*scale*width )/2 +","+scale*400+")");
+		 	 }
+		 	 var r = 60;
+
+		   	d.arcValues =keyVariables.map(function(name){ 
+		   		var arcObject;
+				var index = ids.indexOf(name) - 1;
+		  		if(name=="numStudents"){ console.log(colorMapNum(+d[name]));arcObject = {name:name, r:0,R:40,color:colorMapNum(+d[name]),val:(+d[name]) } ;}
+				if(name=="tuition"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleT(+d[name]),color:colorMap(name),val:(+d[name]) } ;}
+				if(name=="usSupport"){ arcObject = {name:name, r:r + maxRange*index,R:r + maxRange*index + newScaleU(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+				if(name=="numJobs"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleJ(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+				if(name=="livingExpenses"){ arcObject = {name:name, r:r + maxRange*index ,R:r + maxRange*index + newScaleL(+d[name]),color:colorMap(name),val:(+d[name])  } ;}
+					arcObject.r = arcObject.r * scale;
+					arcObject.R = arcObject.R * scale;
+					return arcObject;
+		   		
+		   
+		   	});
+		    
+		  
+		  });
+		  
+		//draw the chart
+		countryChart = chartBckg.append("g")
+						.attr("class","country");
+
+		countryChart.append("svg:a")
+						.attr("xlink:href",function(d){ return "regions.html";})
+						.append("text")
+						.attr("x",-20)
+						.attr("y",scale*(maxRange*(ids.length+1)))
+						.style("font-size","14px")
+						.text("USA");
+
+		var year = countryChart.selectAll("g")
+				   .data(countryData)
+				   .enter()
+				   .append("g")
+					.attr("class","year")
+					.attr("transform",function(d,i){return "rotate("+(360/countYears)*i+")"; })
+					
+		year.append("text")
+					.attr("x",0)
+					.attr("y",maxRange*(ids.length)*scale+10)
+					.attr("text-anchor", "start") 	
+					.attr("font-size","8")
+					.transition()
+						.delay(function(d,i){return 50*i;})
+						.duration(1000)
+						.text(function(d){return d.year});
+					
+		var values = year.selectAll("path")
+					 .data(function(d){return d.arcValues;})
+					 .enter()
+						.append("path")
+						.attr("class",function(d){return d.name;})
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",function(d){return d.color;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.on('click',function(d){return sortData(d.name);})
+						.transition()
+							.delay(function(d,i) {return 250+i*500;})
+							.duration(1000)
+							.attr("d",arc_final);
+		
+		
+		
+		}			
+
+		function sortData(name){
+			sortKey=name;
+			update(selectedVariables);
+
+		}							
+						
+		</script>
+	</body>
+</html>

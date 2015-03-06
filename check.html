@@ -1,0 +1,289 @@
+<html>
+	<head>
+		<title>Learning D3 </title>
+		<script type="text/javascript" src="lib/d3/d3.min.js"> </script>
+		<link rel="stylesheet" href="css/normalize.css">
+		<link rel="stylesheet" href="css/foundation.css">
+		<link rel="stylesheet" href="css/myCss.css">
+		<script src="js/vendor/modernizr.js"></script>
+		<script src="lib/jquery-1.11.1.js"> </script>
+		<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+		
+	</head>
+	<body>
+	<div class="row">
+	<div class="columns small-9">
+		<div class="main"  style="width:500;height=500;"> </div>
+	</div>
+	<div class="columns small-3">
+	<div class="aside">
+		<div class="row">
+				<input type="checkbox" id="numStudents"> Number of Students </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  id="tuition"> Tuition   </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  id="usSupport"> U.S Funding </input>
+		</div>
+		<div class="row">
+			<input type="checkbox"  id="livingExpenses">Living Expenses </input>
+		</div>
+		<div class="row">
+			<input type="button" class="selection" value="Update">  </input>
+		</div>
+	</div >
+	</div>
+	</div>
+		
+
+	
+	
+		<script>
+		
+		
+		//svg
+		 var width =500,height = 500;
+	     var body = d3.select("main");
+		 /*var svg = body.append("svg")
+					.attr("width",500)
+					.attr("height",500)
+				.append("g")
+			        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"); */
+			
+       //radial area
+	    var PI = Math.PI;
+		
+		var areaPoints = [{startAngle:0,endAngle:PI/6,innerRadius:30,outerRadius:100,color:"red"},{startAngle:PI/6,endAngle:PI/3,innerRadius:30,outerRadius:150,color:"yellow"},{startAngle:PI/3,endAngle:PI/2,innerRadius:30,outerRadius:50,color:"green"}];
+		
+		i=0;
+		
+		
+				  
+		//getting data from a JSOn file
+		
+		var chartBckg = d3.select("body").append("svg")
+			.attr("class", "main")
+			.attr("width", 700)
+			.attr("height", 700).append("svg:g")
+			.attr("class","chartBckg")
+			.attr("transform", "translate(300,300)");
+			
+		var tip = d3.tip()
+				  .attr("class","d3-tip")
+				  .html(function(d){return "<div>"+d+"</div>"});
+		chartBckg.call(tip);
+		
+		var arc_final = d3.svg.arc()	
+					.innerRadius(30)
+					.startAngle(function(d,i){
+							return (2*PI/11)*i;
+						})
+					.endAngle(function(d,i){
+						 return (2*PI/11)*(i+1);
+					    
+					})
+					.outerRadius(function(d){return d});
+					
+			var arc_initial = d3.svg.arc()	
+					.innerRadius(30)
+					.startAngle(function(d,i){
+							return (2*PI/11)*i;
+						})
+					.endAngle(function(d,i){
+							return (2*PI/11)*i;
+						})
+					.outerRadius(function(d){return d});
+		
+		//arrays to keep scaled data
+		var scaledNum = [], scaledTuition = [];
+					
+		
+		$(".selection").click(function(){
+		    var checked_ids = [];
+			
+			$("input:checkbox").each(function(){
+			   if(this.checked){
+					checked_ids.push(this.id);
+			}
+			});
+			console.log("checked "+checked_ids);
+			update(checked_ids);
+		
+		});
+		
+		//when checkboxes are clicked	
+		function update(ids){
+		 
+		 d3.selectAll(".chartBckg>*").remove();
+		
+		 d3.json("JSON/Country.json",function(countryData){
+		
+			console.log(ids);
+			/**/
+			var variable = [],count=0,variableScale = [],scaledData=[[]],chart1=[];
+			
+			var color = ["rgba(179,226,205,0.8)","rgba(253,205,172,0.8)","rgba(203,213,232,0.8)","rgba(244,202,228,0.8)"];;
+			
+			//gettig the data
+			if(ids.indexOf("numStudents")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.numStudents;
+				});
+			 
+			    
+			}
+			if(ids.indexOf("tuition")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.tuition;
+				});
+			
+			}
+			
+			if(ids.indexOf("livingExpenses")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.livingExpenses;
+				});
+			
+			}
+			
+			if(ids.indexOf("usSupport")!=-1){
+				variable[count++] = countryData.map(function(d){
+			
+					return d.usSupport;
+				});
+			
+			}
+			
+			
+			console.log("variable"+variable[0]);
+			//defining the scales
+			
+			for(var i=0;i<variable.length;i++){
+				variableScale[i] = d3.scale.linear()
+									.domain([d3.min(variable[i]),d3.max(variable[i])])
+									.range([50,250]);
+				scaledData[i] = [0];
+				  
+				 for (var j = 0; j < variable[i].length; j++) {
+				     
+					 scaledData[i][j]=variableScale[i](variable[i][j]);
+				}
+				
+				console.log("loop 0"+scaledData[i]);
+			}
+			
+			
+			//getting the scaled data
+			//drawing 
+			for(var l=0;l<count;l++){
+			 chart1[l] = chartBckg.append("g")
+									.attr("class",ids[i]);
+			
+			 var temp = chart1[l].selectAll("path")
+					 .data(scaledData[l])
+					 .enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill",color[l])
+						.text(function(d){return d;})
+						.on('mouseover',tip.show)
+						.on('mouseout',tip.hide)
+						.transition()
+							.delay(250+l*500)
+							.attr("d",arc_final);
+			}
+			/**/
+			
+			//initial code
+			//getting the required data
+			/*var num_students = countryData.map(function(d){
+			
+					return d.numStudents;
+			});
+			
+			var tuition = countryData.map(function(d){
+				return d.tuition;
+			})
+			
+			
+			
+			console.log("tuition is"+tuition);
+			
+			//defining scales
+			
+			var numScale = d3.scale.linear()
+									.domain([d3.min(num_students),d3.max(num_students)])
+									.range([50,250]);
+									
+			var tuitionScale = d3.scale.linear()
+								 .domain([d3.min(tuition),d3.max(tuition)])
+								 .range([50,250]);
+			//gettingt the scaled data						
+
+			for (var i = 0; i < num_students.length; i++) {
+				scaledNum[i] = numScale(num_students[i]);
+			}
+			
+			
+			for (var i = 0; i < num_students.length; i++) {
+				scaledTuition[i] = tuitionScale(tuition[i]);
+			}
+			console.log("scaled tuition"+scaledTuition);
+			
+			//drawing the charts
+			 var numStudentsChart = chart.append("g")
+									.attr("class","numStudents");
+			
+			 var rad1 = numStudentsChart.selectAll("path")
+					 .data(scaledNum)
+					 .enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill","rgba(70,130,180,0.5)")
+						.transition()
+							.delay(250)
+							.attr("d",arc_final);
+			console.log("rad1 "+rad1);
+			
+			if(ids.indexOf("tuition")!=-1){
+			
+						
+			var tuitionChart = chart.append("g")
+									.attr("class","tuition");
+						
+			var rad2 = 	tuitionChart.selectAll("path")
+					 .data(scaledTuition)
+					 .enter()
+						.append("path")
+						.attr("d",arc_initial)
+						.attr("stroke","white")
+						.attr("stroke-width",2)
+						.style("fill","rgba(255,255,0,0.5)")
+						.transition()
+							.delay(250)
+							.attr("d",arc_final);	
+				console.log("ead2 "+rad2)
+			}				
+			/* d3.nest()
+					.key(function(d){ return d.Year})
+					.entries(countryData);
+					
+				console.log("hello"+countryData);*/
+		
+			
+		});
+			
+			
+		}										
+						
+		</script>
+	</body>
+</html>

@@ -1,0 +1,101 @@
+[
+  {
+    "year":2004,
+    "numStudents":572509.00,
+    "livingExpenses":10010000000.00,
+    "livingExpensesDependents":491000000.00,
+    "tuition":7361000000.00,
+    "usSupport":4988000000.00,
+    "totalContribution":17371000000.00
+  },
+  {
+    "year":2005,
+    "numStudents":565039.00,
+    "livingExpenses":9604000000.00,
+    "livingExpensesDependents":421000000.00,
+    "tuition":8997000000.00,
+    "usSupport":5733000000.00,
+    "totalContribution":18601000000.00
+  },
+  {
+    "year":2006,
+    "numStudents":564766.00,
+    "livingExpenses":10079000000.00,
+    "livingExpensesDependents":432000000.00,
+    "tuition":9444000000.00,
+    "usSupport":6463000000.00,
+    "totalContribution": 19522000000.00
+  },
+  {
+    "year":2007,
+    "numStudents":582984.00,
+    "livingExpenses":10438000000.00,
+    "livingExpensesDependents":412000000.00,
+    "tuition":9929000000.00,
+    "usSupport":6280000000.00,
+    "totalContribution": 20366000000.00 
+  },
+  {
+    "year":2008,
+    "numStudents":623805.00,
+    "livingExpenses":10979000000.00,
+    "livingExpensesDependents":413000000.00,
+    "tuition":10639000000.00,
+    "usSupport":6488000000.00,
+    "totalContribution": 21618000000.00 
+  },
+  {
+    "year":2009,
+    "numStudents":671616.00,
+    "livingExpenses":11855000000.00,
+    "livingExpensesDependents":12316000000.00,
+    "tuition":434000000.00,
+    "usSupport":6948000000.00,
+    "totalContribution": 24171000000.00 
+  },
+  {
+    "year":2010,
+    "numStudents":690923.00,
+    "livingExpenses":12455000000.00,
+    "livingExpensesDependents":448000000.00,
+    "tuition":13095000000.00,
+    "usSupport":7223000000.00,
+    "totalContribution": 25551000000.00 
+  },
+  {
+    "year":2011,
+    "numStudents":723277.00,
+    "livingExpenses":13207000000.00,
+    "livingExpensesDependents":378000000.00,
+    "tuition":14348000000.00,
+    "usSupport":7700000000.00,
+    "totalContribution": 27555000000.00 
+  },
+  {
+    "year":2012,
+    "numStudents":764495.00,
+    "livingExpenses":13997000000.00,
+    "livingExpensesDependents":397000000.00,
+    "tuition":15812000000.00,
+    "usSupport":8399000000.00,
+    "totalContribution": 29809000000.00 
+  },
+  {
+    "year":2013,
+    "numStudents":819644.00,
+    "livingExpenses":14715000000.00,
+    "livingExpensesDependents":393000000.00,
+    "tuition":17702000000.00,
+    "usSupport":8815000000.00,
+    "totalContribution": 32417000000.00 
+  },
+  {
+    "year":2014,
+    "numStudents":886052.00,
+    "livingExpenses":16265000000.00,
+    "livingExpensesDependents":442000000.00,
+    "tuition":19754000000.00,
+    "usSupport":9669000000.00,
+    "totalContribution": 36019000000.00 
+  }
+]
